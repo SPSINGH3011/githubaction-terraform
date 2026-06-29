@@ -1,4 +1,4 @@
 resource "azurerm_resource_group" "rg" {
-  name     = "github-terraformrg"
+  name     = "githus-terraformrg"
   location = "West Europe"
 }
