@@ -1,0 +1,90 @@
+name: Terraform Pipeline
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+
+# ==============================
+# Job 1 - Terraform Plan
+# ==============================
+
+  terraform-plan:
+
+    name: Terraform Plan
+
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - dev
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan
+
+# ==============================
+# Job 2 - Terraform Apply
+# ==============================
+
+  terraform-apply:
+
+    name: Terraform Apply
+
+    needs: terraform-plan
+
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - dev
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
