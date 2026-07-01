@@ -3,6 +3,10 @@ name: Terraform Pipeline
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   terraform:
 
@@ -11,20 +15,25 @@ jobs:
       - Linux
       - X64
       - dev
+      - bbvm
 
     steps:
-      - uses: actions/checkout@v4
 
-      - name: Verify Runner
-        run: |
-          hostname
-          uname -a
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Verify Azure Login
+        run: az account show
 
       - name: Terraform Version
         run: terraform version
-
-      - name: Azure Login Check
-        run: az account show
 
       - name: Terraform Init
         run: terraform init
@@ -34,3 +43,6 @@ jobs:
 
       - name: Terraform Plan
         run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
