@@ -1,0 +1,36 @@
+name: Terraform Pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform:
+
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Runner
+        run: |
+          hostname
+          uname -a
+
+      - name: Terraform Version
+        run: terraform version
+
+      - name: Azure Login Check
+        run: az account show
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan
